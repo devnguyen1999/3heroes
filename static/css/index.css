@@ -1,0 +1,10 @@
+.navbar-brand {
+  font-family: Righteous;
+}
+.content{
+  height: 100vh;
+}
+.description{
+  margin-top: -0.5rem;
+  margin-bottom: 1.5rem;
+}

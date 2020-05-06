@@ -1,0 +1,32 @@
+.navbar-brand {
+  font-family: Righteous;
+}
+.content {
+  height: 100vh;
+}
+.container-fluid .badge {
+    width: 100%;
+    height: 10rem;
+    color: white;
+    margin: 1rem;
+}
+.container-fluid .badge:hover {
+    opacity: 0.8;
+}
+.container-fluid .badge .m-3{
+    font-family: 'Roboto', sans-serif;
+    font-weight: normal;
+    font-size: 1rem;
+}
+.facebook{
+    background-color: #3b5998;
+}
+.instagram{
+    background-color: #db4a39;
+}
+.github{
+    background-color: #7dbbe6;
+}
+.discord{
+    background-color: #738adb;
+}
