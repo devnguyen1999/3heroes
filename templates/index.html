@@ -1,115 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link
-      rel="icon"
-      href="https://pluspng.com/img-png/avengers-logo-png-avengers-logo-png-1376.png"
-    />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <!--Custom CSS-->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
-
-    <!--Boostrap-->
-    <link
-      rel="stylesheet"
-      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
-      crossorigin="anonymous"
-    />
-
-    <!--Font Awesome-->
-    <link
-      rel="stylesheet"
-      href="https://pro.fontawesome.com/releases/v5.12.0/css/all.css"
-      integrity="sha384-ekOryaXPbeCpWQNxMwSWVvQ0+1VrStoPJq54shlYhR8HzQgig1v5fas6YgOqLoKz"
-      crossorigin="anonymous"
-    />
-
-    <!--Google Fonts-->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Righteous&display=swap"
-      rel="stylesheet"
-    />
-
-    <!--Dropzone-->
-    {{ dropzone.load_css() }} {{ dropzone.style('border: 2px dashed #0087F7;
-    margin: 5%; min-height: 100%;') }}
-
-    <title>3HEROES</title>
-  </head>
-
-  <body>
-    <div class="content d-flex flex-column">
-      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand ml-3" href="http://localhost:5000/">3HEROES</a>
-        <button
-          class="navbar-toggler d-lg-none"
-          type="button"
-          data-toggle="collapse"
-          data-target="#collapsibleNavId"
-          aria-controls="collapsibleNavId"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="collapsibleNavId">
-          <ul class="navbar-nav ml-3 mr-auto mt-2 mt-lg-0">
-            <li class="nav-item mx-2">
-              <a class="nav-link" href="http://localhost:5000/">Home</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="http://localhost:5000/about">About</a>
-            </li>
-            <li class="nav-item mx-2">
-              <a class="nav-link" href="http://localhost:5000/contact">Contact</a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-      <div class="container-fluid d-flex justify-content-center">
-        <div class="col-lg-5 py-5 my-5">
-          <h1 class="logo display-2 text-center">3HEROES</h1>
-          <h5 class="description display-block text-center">
-            A study of a system to gather Android application information
-          </h5>
-          <div class="uploadbox">
-            {{ dropzone.create('upload') }} {{ dropzone.load_js() }} {{
-            dropzone.config() }}
-          </div>
-        </div>
-      </div>
-      <footer class="py-5 bg-dark mt-auto">
-        <div class="container">
-          <p class="m-0 text-center text-white">
-            Copyright &copy; 3HEROES Website 2020
-          </p>
-        </div>
-      </footer>
+{% extends "base.html" %}
+{% block css %}
+{{ dropzone.load_css() }}
+{{ dropzone.style('border: 2px dashed #0087F7; margin: 5%;') }}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/index.css') }}"
+/>
+{% endblock %}
+{% block title %}3HEROES{% endblock %}
+{% block content %}
+<div class="container-fluid d-flex justify-content-center">
+  <div class="col-lg-5 py-5 my-5">
+    <h1 class="logo display-2 text-center">3HEROES</h1>
+    <h5 class="description display-block text-center">
+      A study of a system to gather Android application information
+    </h5>
+    <div class="uploadbox">
+      {{ dropzone.create('upload') }}
+      {{ dropzone.load_js() }}
+      {{ dropzone.config() }}
     </div>
-
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script
-      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-      integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-      integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-      crossorigin="anonymous"
-    ></script>
-  </body>
-</html>
+  </div>
+</div>
+{% endblock %}

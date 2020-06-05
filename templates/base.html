@@ -8,9 +8,6 @@
     />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!--Custom CSS-->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/results.css') }}">
-
     <!--Boostrap-->
     <link
       rel="stylesheet"
@@ -37,7 +34,15 @@
       rel="stylesheet"
     />
 
-    <title>Results</title>
+    <!--Custom CSS-->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/base.css') }}"
+    />
+
+    {% block css %}{% endblock %}
+
+    <title>{% block title %} {% endblock %}</title>
   </head>
 
   <body>
@@ -57,19 +62,21 @@
         </button>
         <div class="collapse navbar-collapse" id="collapsibleNavId">
           <ul class="navbar-nav ml-3 mr-auto mt-2 mt-lg-0">
-            <li class="nav-item mx-2">
+            <li class="nav-item ml-2">
               <a class="nav-link" href="http://localhost:5000/">Home</a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item ml-2">
               <a class="nav-link" href="http://localhost:5000/about">About</a>
             </li>
-            <li class="nav-item mx-2">
-              <a class="nav-link" href="http://localhost:5000/contact">Contact</a>
+            <li class="nav-item ml-2">
+              <a class="nav-link" href="http://localhost:5000/contact"
+                >Contact</a
+              >
             </li>
           </ul>
         </div>
       </nav>
-
+      {% block content %} {% endblock %}
       <footer class="py-5 bg-dark mt-auto">
         <div class="container">
           <p class="m-0 text-center text-white">
