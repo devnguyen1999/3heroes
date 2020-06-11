@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block css %}
-{{ dropzone.load_css() }}
-{{ dropzone.style('border: 2px dashed #0087F7; margin: 5%;') }}
 <link
   rel="stylesheet"
-  href="{{ url_for('static', filename='css/index.css') }}"
+  href="{{ url_for('static', filename='css/home.css') }}"
 />
+{{ dropzone.load_css() }}
+{{ dropzone.style('border: 2px dashed #0087F7; margin: 5%;') }}
 {% endblock %}
 {% block title %}3HEROES{% endblock %}
 {% block content %}
@@ -13,13 +13,11 @@
   <div class="col-lg-5 py-5 my-5">
     <h1 class="logo display-2 text-center">3HEROES</h1>
     <h5 class="description display-block text-center">
-      A study of a system to gather Android application information
+      A study of a system to gather Android application information.
     </h5>
-    <div class="uploadbox">
-      {{ dropzone.create('upload') }}
-      {{ dropzone.load_js() }}
-      {{ dropzone.config() }}
-    </div>
+    {{ dropzone.create(action=url_for('upload', id=id)) }}
+    {{ dropzone.load_js() }}
+    {{ dropzone.config(redirect_url=url_for('result', id=id)) }}
   </div>
 </div>
 {% endblock %}

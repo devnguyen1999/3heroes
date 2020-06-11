@@ -1,43 +1,29 @@
-import sys, os, uuid
-
-from flask import Flask, render_template, request, send_from_directory, jsonify, url_for
-from flask_dropzone import Dropzone
+import os, uuid, hashlib
+from application import app, basedir, dropzone
+from flask import render_template, request, url_for, redirect
 from androguard.cli import androaxml_main
 from androguard.core.bytecodes.apk import APK
-
-import hashlib
-
 from androguard.util import get_certificate_name_string
 from asn1crypto import x509, keys
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-
-app = Flask(__name__)
-
-app.config.update(
-    UPLOADED_PATH=os.path.join(basedir, 'static/uploads'),
-    # Flask-Dropzone config:
-    DROPZONE_ALLOWED_FILE_CUSTOM=True,
-    DROPZONE_ALLOWED_FILE_TYPE='.apk',
-    DROPZONE_MAX_FILE_SIZE=1024
-)
-dropzone = Dropzone(app)
-
-@app.route('/', methods = ['POST', 'GET'])
-def upload():
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/home', methods=['GET', 'POST'])
+def home():
+    id = str(uuid.uuid4())
+    return render_template('home.html', id=id)
+@app.route('/upload/<id>', methods=['GET', 'POST'])
+def upload(id):
     if request.method == 'POST':
-        file = request.files.get('file')
-        id = str(uuid.uuid4())
-        extension = os.path.splitext(file.filename)[1]
-        filename = id + extension
-        file.save(os.path.join(app.config['UPLOADED_PATH'], filename))
-        app.config.update(
-            DROPZONE_REDIRECT_VIEW=url_for('result') # set redirect view
-        )
-    return render_template('index.html')
-
-
-@app.route('/result', methods = ['POST', 'GET'])
+        file = request.files['file']
+        file.save(os.path.join(app.config['UPLOADED_PATH'], id + '.apk'))
+    return 'Upload successful!'
+@app.route('/about', methods=['GET', 'POST'])
+def about():
+    return render_template('about.html')
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    return render_template('contact.html')
+@app.route('/result/<id>', methods=['GET', 'POST'])
 def result(id):
     # Keep the list of hash functions in sync with cli/entry_points.py:sign
     hashfunctions = dict(md5=hashlib.md5,
@@ -46,7 +32,7 @@ def result(id):
                          sha512=hashlib.sha512
                          )
 
-    a = APK(os.path.join(basedir, 'static/uploads/' + id + '.apk'))
+    a = APK(os.path.join(app.config['UPLOADED_PATH'], id + '.apk'))
     
     certs = set(a.get_certificates_der_v3() + a.get_certificates_der_v2() + [a.get_certificate_der(x) for x in a.get_signature_names()])
 
@@ -128,11 +114,8 @@ def result(id):
 
 
     apkinfo = {
-        'fileName': os.path.basename(a.get_filename()),
         'appName': a.get_app_name(),
         'fileSize': os.stat(a.get_filename()).st_size,
-
-        
 
         'package': a.get_package(),
         'androidversionCode': a.get_androidversion_code(),
@@ -154,7 +137,7 @@ def result(id):
         
         'providers': a.get_providers()
     }
-    return render_template('result.html', id=id, apkinfo=apkinfo, certificates=certificates, hashfuncs=hashfuncs)
+    return render_template('result.html', id = id, apkinfo = apkinfo, certificates = certificates, hashfuncs = hashfuncs)
 
 
 @app.route('/downloadxml')
@@ -162,20 +145,4 @@ def downloadxml():
 
     androaxml_main('static/uploads/app-prod-debug.apk', 'static/outputs/output.xml')
 
-    return send_from_directory('static/outputs', 'output.xml', as_attachment=True)
-
-
-
-@app.route('/about')
-def about():
-    user = {'username': 'Dang Thanh'}
-    return render_template('about.html', user=user)
-
-
-@app.route('/contact')
-def contact():
-    return render_template('contact.html')
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    return send_from_directory('static/outputs','output.xml',as_attachment=True)
