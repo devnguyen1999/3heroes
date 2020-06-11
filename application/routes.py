@@ -145,8 +145,4 @@ def downloadxml(id):
 
     androaxml_main(os.path.join(app.config['UPLOADED_PATH'], id + '.apk'), os.path.join(app.config['OUTPUT_PATH'], id + '.xml') )
 
-<<<<<<< HEAD
     return send_from_directory(os.path.join(app.config['OUTPUT_PATH']), id + '.xml', as_attachment=True)
-=======
-    return send_from_directory(os.path.join(app.config['OUTPUT_PATH']), id + '.xml', as_attachment=True)
->>>>>>> cf1fbdfe4977bd03dddb37c081154c1b68375e32
