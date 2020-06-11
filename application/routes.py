@@ -1,6 +1,6 @@
 import os, uuid, hashlib
 from application import app, basedir, dropzone
-from flask import render_template, request, url_for, redirect
+from flask import render_template, request, url_for, redirect, send_from_directory
 from androguard.cli import androaxml_main
 from androguard.core.bytecodes.apk import APK
 from androguard.util import get_certificate_name_string
@@ -140,9 +140,9 @@ def result(id):
     return render_template('result.html', id = id, apkinfo = apkinfo, certificates = certificates, hashfuncs = hashfuncs)
 
 
-@app.route('/downloadxml')
-def downloadxml():
+@app.route('/downloadxml/<id>')
+def downloadxml(id):
 
-    androaxml_main('static/uploads/app-prod-debug.apk', 'static/outputs/output.xml')
+    androaxml_main(os.path.join(app.config['UPLOADED_PATH'], id + '.apk'),os.path.join(app.config['OUTPUT_PATH'], id + '.xml') )
 
-    return send_from_directory('static/outputs','output.xml',as_attachment=True)
+    return send_from_directory(os.path.join(app.config['OUTPUT_PATH']), id + '.xml',as_attachment=True)
