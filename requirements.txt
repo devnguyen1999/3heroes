@@ -1,3 +1,4 @@
 flask
 androguard
 flask-dropzone
+flask-mysql
