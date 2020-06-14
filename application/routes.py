@@ -1,6 +1,6 @@
 import os, uuid, hashlib
-from application import app, basedir, dropzone
-from flask import render_template, request, url_for, redirect, send_from_directory
+from application import app, basedir, dropzone, mysql
+from flask import render_template, request, url_for, send_from_directory, jsonify
 from androguard.cli import androaxml_main
 from androguard.core.bytecodes.apk import APK
 from androguard.util import get_certificate_name_string
@@ -16,6 +16,7 @@ def upload(id):
     if request.method == 'POST':
         file = request.files['file']
         file.save(os.path.join(app.config['UPLOADED_PATH'], id + '.apk'))
+
     return 'Upload successful!'
 @app.route('/about', methods=['GET', 'POST'])
 def about():
@@ -137,6 +138,29 @@ def result(id):
         
         'providers': a.get_providers()
     }
+
+    appName = a.get_app_name()
+    fileSize = os.stat(a.get_filename()).st_size
+    md5 = md5
+    sha1 = sha1
+    sha256 = sha256
+    sha512 = sha512
+    firstSubmission = '2020-06-09 22:22:22'
+    lastSubmission = '2020-06-09 22:22:22'
+    package = a.get_package()
+    androidversionCode = a.get_androidversion_code()
+    androidversionName = a.get_androidversion_name()
+    minSDKVersion = a.get_min_sdk_version()
+    maxSDKVersion = a.get_max_sdk_version()
+    targetSDKVersion = a.get_target_sdk_version()
+    mainActivity = a.get_main_activity()
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.callproc('addApkInfo',(id, appName, fileSize, md5, sha1, sha256, sha512, firstSubmission, lastSubmission, package, androidversionCode, androidversionName, minSDKVersion, maxSDKVersion, targetSDKVersion, mainActivity))
+    data = cursor.fetchall()
+    if len(data) == 0:
+        conn.commit()
     return render_template('result.html', id = id, apkinfo = apkinfo, certificates = certificates, hashfuncs = hashfuncs)
 
 

@@ -1,0 +1,90 @@
+CREATE DATABASE 3heroes;
+USE 3heroes;
+CREATE TABLE tbl_apkinfo (
+	id VARCHAR(50) NOT NULL,
+	appName VARCHAR(50) NULL,
+	fileSize INT NULL,
+	md5 VARCHAR(175) NOT NULL UNIQUE,
+	sha1 VARCHAR(200) NOT NULL UNIQUE,
+	sha256 VARCHAR(225) NOT NULL UNIQUE,
+	sha512 VARCHAR(250) NOT NULL UNIQUE,
+	firstSubmission DATETIME NULL,
+	lastSubmission DATETIME NULL,
+	package VARCHAR(50) NULL,
+	androidversionCode VARCHAR(50) NULL,
+	androidversionName VARCHAR(50) NULL,
+	minSDKVersion TINYINT NULL,
+	maxSDKVersion TINYINT NULL,
+	targetSDKVersion TINYINT NULL,
+	mainActivity VARCHAR(50) NULL,
+	PRIMARY KEY (id)
+);
+
+DELIMITER //
+CREATE DEFINER=root@localhost PROCEDURE addApkInfo(
+	IN id VARCHAR(50),
+	IN appName VARCHAR(50),
+	IN fileSize INT,
+	IN md5 VARCHAR(175),
+	IN sha1 VARCHAR(200),
+	IN sha256 VARCHAR(225),
+	IN sha512 VARCHAR(250),
+	IN firstSubmission DATETIME,
+	IN lastSubmission DATETIME,
+	IN package VARCHAR(50),
+	IN androidversionCode VARCHAR(50),
+	IN androidversionName VARCHAR(50),
+	IN minSDKVersion TINYINT,
+	IN maxSDKVersion TINYINT,
+	IN targetSDKVersion TINYINT,
+	IN mainActivity VARCHAR(50)
+)
+BEGIN
+    IF ( SELECT EXISTS (SELECT * FROM tbl_apkinfo WHERE md5 = md5) ) THEN
+     
+        SELECT 'Username Exists !!';
+     
+    ELSE
+     
+        INSERT INTO tbl_apkinfo
+        (
+            id,
+			appName,
+			fileSize,
+			md5,
+			sha1,
+			sha256,
+			sha512,
+			firstSubmission,
+			lastSubmission,
+			package,
+			androidversionCode,
+			androidversionName,
+			minSDKVersion,
+			maxSDKVersion,
+			targetSDKVersion,
+			mainActivity
+        )
+        VALUES
+        (
+            id,
+			appName,
+			fileSize,
+			md5,
+			sha1,
+			sha256,
+			sha512,
+			firstSubmission,
+			lastSubmission,
+			package,
+			androidversionCode,
+			androidversionName,
+			minSDKVersion,
+			maxSDKVersion,
+			targetSDKVersion,
+			mainActivity
+        );
+     
+    END IF;
+END //
+DELIMITER ;
