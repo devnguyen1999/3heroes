@@ -2,4 +2,3 @@ flask
 androguard
 flask-dropzone
 flask-mysql
-flask-restful

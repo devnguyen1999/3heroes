@@ -1,6 +1,6 @@
 import os, uuid, hashlib
 from application import app, basedir, dropzone, mysql
-from flask import render_template, request, url_for, send_from_directory, jsonify
+from flask import render_template, request, url_for, send_from_directory, redirect, session
 from androguard.cli import androaxml_main
 from androguard.core.bytecodes.apk import APK
 from androguard.util import get_certificate_name_string
@@ -9,32 +9,62 @@ from asn1crypto import x509, keys
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
 def home():
-    id = str(uuid.uuid4())
-    return render_template('home.html', id=id)
-@app.route('/upload/<id>', methods=['GET', 'POST'])
-def upload(id):
+    # set session cho file apk
+    if 'md5' not in session:
+        session['md5'] = []
+    md5 = session['md5']
+
     if request.method == 'POST':
         file = request.files['file']
+
+        # tao id cho file
+        id = str(uuid.uuid4())
+
+        # luu file vao thu mu upload voi ten file la id vua tao
         file.save(os.path.join(app.config['UPLOADED_PATH'], id + '.apk'))
 
-    return 'Upload successful!'
+        # lay md5 cua file
+        hashfunctions = dict(md5=hashlib.md5)
+        a = APK(os.path.join(app.config['UPLOADED_PATH'], id + '.apk'))
+        certs = set(a.get_certificates_der_v3() + a.get_certificates_der_v2() + [a.get_certificate_der(x) for x in a.get_signature_names()])
+        for cert in certs:
+            for k, v in hashfunctions.items():
+                md5 = v(cert).hexdigest()
+        
+        # gan gia tri md5 vao session
+        session['md5'] = md5
+
+        # doi ten file lai thanh <md5>.apk
+        os.chdir(os.path.join(app.config['UPLOADED_PATH']))
+        os.rename(id + '.apk', md5 + '.apk')
+    return render_template('home.html')
 @app.route('/about', methods=['GET', 'POST'])
 def about():
     return render_template('about.html')
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     return render_template('contact.html')
-@app.route('/result/<id>', methods=['GET', 'POST'])
-def result(id):
-    # Keep the list of hash functions in sync with cli/entry_points.py:sign
+@app.route('/result', methods=['GET', 'POST'])
+def result():
+    # redirect ve trang chu neu chua co file nao duoc upload
+    if 'md5' not in session or session['md5'] == []:
+        return redirect(url_for('home'))
+    
+    # lay gia tri md5 va remove gia tri md5 trong session
+    md5 = session['md5']
+    session.pop('md5', None)
+
+    # danh sach cac ham hash
     hashfunctions = dict(md5=hashlib.md5,
                          sha1=hashlib.sha1,
                          sha256=hashlib.sha256,
                          sha512=hashlib.sha512
                          )
-
-    a = APK(os.path.join(app.config['UPLOADED_PATH'], id + '.apk'))
     
+    #chi dinh file can phan tich
+    a = APK(os.path.join(app.config['UPLOADED_PATH'], md5 + '.apk'))
+    
+    # lay thong tin chung chi cua file
     certs = set(a.get_certificates_der_v3() + a.get_certificates_der_v2() + [a.get_certificate_der(x) for x in a.get_signature_names()])
 
     for cert in certs:
@@ -96,7 +126,7 @@ def result(id):
             elif i.lstrip().split('=')[0] == 'localityName':
                 certificates['subject']['localityName'] = i.lstrip().split('=')[1]
 
-        
+        # lay gia trin trong danh sach cac ham hash
         for k, v in hashfunctions.items():
             if k == 'md5':
                 md5 = v(cert).hexdigest()
@@ -155,13 +185,13 @@ def result(id):
     targetSDKVersion = a.get_target_sdk_version()
     mainActivity = a.get_main_activity()
 
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    cursor.callproc('addApkInfo',(id, appName, fileSize, md5, sha1, sha256, sha512, firstSubmission, lastSubmission, package, androidversionCode, androidversionName, minSDKVersion, maxSDKVersion, targetSDKVersion, mainActivity))
-    data = cursor.fetchall()
-    if len(data) == 0:
-        conn.commit()
-    return render_template('result.html', id = id, apkinfo = apkinfo, certificates = certificates, hashfuncs = hashfuncs)
+    # conn = mysql.connect()
+    # cursor = conn.cursor()
+    # cursor.callproc('addApkInfo',(md5, appName, fileSize, sha1, sha256, sha512, firstSubmission, lastSubmission, package, androidversionCode, androidversionName, minSDKVersion, maxSDKVersion, targetSDKVersion, mainActivity))
+    # data = cursor.fetchall()
+    # if len(data) == 0:
+    #     conn.commit()
+    return render_template('result.html', md5 = md5, apkinfo = apkinfo, certificates = certificates, hashfuncs = hashfuncs)
 
 
 @app.route('/downloadxml/<id>')

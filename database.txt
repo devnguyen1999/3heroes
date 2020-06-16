@@ -1,10 +1,9 @@
 CREATE DATABASE 3heroes;
 USE 3heroes;
 CREATE TABLE tbl_apkinfo (
-	id VARCHAR(50) NOT NULL,
+	md5 VARCHAR(175) NOT NULL,
 	appName VARCHAR(50) NULL,
 	fileSize INT NULL,
-	md5 VARCHAR(175) NOT NULL UNIQUE,
 	sha1 VARCHAR(200) NOT NULL UNIQUE,
 	sha256 VARCHAR(225) NOT NULL UNIQUE,
 	sha512 VARCHAR(250) NOT NULL UNIQUE,
@@ -17,15 +16,14 @@ CREATE TABLE tbl_apkinfo (
 	maxSDKVersion TINYINT NULL,
 	targetSDKVersion TINYINT NULL,
 	mainActivity VARCHAR(50) NULL,
-	PRIMARY KEY (id)
+	PRIMARY KEY (md5)
 );
 
 DELIMITER //
 CREATE DEFINER=root@localhost PROCEDURE addApkInfo(
-	IN id VARCHAR(50),
+	IN md5 VARCHAR(175),
 	IN appName VARCHAR(50),
 	IN fileSize INT,
-	IN md5 VARCHAR(175),
 	IN sha1 VARCHAR(200),
 	IN sha256 VARCHAR(225),
 	IN sha512 VARCHAR(250),
@@ -42,16 +40,15 @@ CREATE DEFINER=root@localhost PROCEDURE addApkInfo(
 BEGIN
     IF ( SELECT EXISTS (SELECT * FROM tbl_apkinfo WHERE md5 = md5) ) THEN
      
-        SELECT 'Username Exists !!';
+        SELECT 'File already exists!';
      
     ELSE
      
         INSERT INTO tbl_apkinfo
         (
-            id,
+			md5,
 			appName,
 			fileSize,
-			md5,
 			sha1,
 			sha256,
 			sha512,
@@ -67,10 +64,9 @@ BEGIN
         )
         VALUES
         (
-            id,
+			md5,
 			appName,
 			fileSize,
-			md5,
 			sha1,
 			sha256,
 			sha512,
