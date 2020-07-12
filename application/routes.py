@@ -5,6 +5,7 @@ from androguard.cli import androaxml_main
 from androguard.core.bytecodes.apk import APK
 from androguard.util import get_certificate_name_string
 from asn1crypto import x509, keys
+from time import process_time
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
@@ -60,7 +61,8 @@ def result():
                          sha256=hashlib.sha256,
                          sha512=hashlib.sha512
                          )
-    
+    #tao moc thoi gian
+    start = process_time()
     #chi dinh file can phan tich
     a = APK(os.path.join(app.config['UPLOADED_PATH'], md5 + '.apk'))
     
@@ -142,8 +144,10 @@ def result():
             'sha256': sha256,
             'sha512': sha512
         }
-
-
+    #ket thuc thoi gian phan tich
+    stop = process_time()
+    print("Elapsed time during the whole program in seconds:", stop - start)
+    
     apkinfo = {
         'appName': a.get_app_name(),
         'fileSize': os.stat(a.get_filename()).st_size,
