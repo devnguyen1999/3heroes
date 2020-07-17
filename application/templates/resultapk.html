@@ -1,0 +1,73 @@
+{% extends "base.html" %} {% block css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/resultapk.css') }}"
+/>
+{% endblock %} {% block title %}Result{% endblock %} {% block content %}
+<div class="container">
+  <div class="row my-3">
+    <div class="col-4 col-lg-2">
+      <img
+        src="https://cdn0.iconfinder.com/data/icons/material-circle-apps/512/icon-android-material-design-512.png"
+        class="img-fluid"
+        alt=""
+      />
+    </div>
+    <div class="col-8 col-lg-10">
+      <h5>APK FILE INFO</h5>
+      <div class="d-flex flex-column">
+        <span>App Name:&#160;{{ apkinfo.appName }}</span>
+        <span>File Size:&#160;{{ apkinfo.fileSize }}&#160;bytes</span>
+        <span>Analysis Time:&#160;{{ apkinfo.analysisTime }}&#160;seconds</span>
+      </div>
+    </div>
+  </div>
+  <div class="row my-3">
+    <div class="col-12">
+      <h5>DETAIL</h5>
+      <div class="d-flex flex-column">
+        <h6>Basic Properties</h6>
+        <span>MD5:&#160;{{ apkinfo.md5 }}</span>
+        <span>SHA-1:&#160;{{ apkinfo.sha1 }}</span>
+        <span>SHA-256:&#160;{{ apkinfo.sha256 }}</span>
+        <span>SHA-512:&#160;{{ apkinfo.sha512 }}</span>
+
+        <h6>History</h6>
+        <span>First Submission:&#160;{{ apkinfo.firstSubmission }}</span>
+        <span>Last Submission:&#160;{{ apkinfo.lastSubmission }}</span>
+
+        <h6>Summary</h6>
+        <span>Package Name:&#160;{{ apkinfo.package }}</span>
+        <span>Internal Version:&#160;{{ apkinfo.androidversionCode }}</span>
+        <span>Displayed Version:&#160;{{ apkinfo.androidversionName }}</span>
+        <span>Minimum SDK Version:&#160;{{ apkinfo.minSDKVersion }}</span>
+        <span>Maximum SDK Version:&#160;{{ apkinfo.maxSDKVersion }}</span>
+        <span>Target SDK Version:&#160;{{ apkinfo.targetSDKVersion }}</span>
+
+        <h6>Certificate Attributes</h6>
+        <span>Valid From:&#160;{{ certificate.validFrom }}</span>
+        <span>Valid To:&#160;{{ certificate.validTo }}</span>
+        <span>Serial Number:&#160;{{ certificate.serialNumber }}</span>
+        <span>Hash Algorithm:&#160;{{ certificate.hashAlgorithm }}</span>
+        <span>Signature Algorithm:&#160;{{ certificate.signatureAlgorithm }}</span>
+        <h6>Certificate Issuer:</h6>
+        <span>Common Name:&#160;{{ certificateIssuer.commonName }}</span>
+        <span>Organization:&#160;{{ certificateIssuer.organizationName }}</span>
+        <span>Organizational Unit:&#160;{{ certificateIssuer.organizationalUnitName }}</span>
+        <span>Country Code:&#160;{{ certificateIssuer.countryName }}</span>
+        <span>State:&#160;{{ certificateIssuer.stateOrProvinceName }}</span>
+        <span>Locality:&#160;{{ certificateIssuer.localityName }}</span>
+
+        <h6>Certificate Subject:</h6>
+        <span>Common Name:&#160;{{ certificateSubject.commonName }}</span>
+        <span>Organization:&#160;{{ certificateSubject.organizationName }}</span>
+        <span>Organizational Unit:&#160;{{ certificateSubject.organizationalUnitName }}</span>
+        <span>Country Code:&#160;{{ certificateSubject.countryName }}</span>
+        <span>State:&#160;{{ certificateSubject.stateOrProvinceName }}</span>
+        <span>Locality:&#160;{{ certificateSubject.localityName }}</span>
+        
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

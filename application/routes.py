@@ -1,43 +1,41 @@
-import os, uuid, hashlib
+import os, uuid, time
 from application import app, basedir, dropzone, mysql
+from application.analyze import analyze
+from application.checkAPK import checkAPK
+from application.getMD5 import getMD5
 from flask import render_template, request, url_for, send_from_directory, redirect, session
-from androguard.cli import androaxml_main
-from androguard.core.bytecodes.apk import APK
-from androguard.util import get_certificate_name_string
-from asn1crypto import x509, keys
-from time import process_time
+import zipfile
+from shutil import copyfile
+from datetime import datetime
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
 def home():
-    # set session cho file apk
-    if 'md5' not in session:
-        session['md5'] = []
-    md5 = session['md5']
+    if 'id' not in session:
+        session['id'] = []
+        session['extension'] = []
 
     if request.method == 'POST':
         file = request.files['file']
-
-        # tao id cho file
+        
         id = str(uuid.uuid4())
 
-        # luu file vao thu mu upload voi ten file la id vua tao
-        file.save(os.path.join(app.config['UPLOADED_PATH'], id + '.apk'))
-
-        # lay md5 cua file
-        hashfunctions = dict(md5=hashlib.md5)
-        a = APK(os.path.join(app.config['UPLOADED_PATH'], id + '.apk'))
-        certs = set(a.get_certificates_der_v3() + a.get_certificates_der_v2() + [a.get_certificate_der(x) for x in a.get_signature_names()])
-        for cert in certs:
-            for k, v in hashfunctions.items():
-                md5 = v(cert).hexdigest()
+        extension = os.path.splitext(file.filename)[1]
         
-        # gan gia tri md5 vao session
-        session['md5'] = md5
+        if extension == '.apk':
+            file.save(os.path.join(app.config['TEMPORARY_PATH'], id + extension))
 
-        # doi ten file lai thanh <md5>.apk
-        os.chdir(os.path.join(app.config['UPLOADED_PATH']))
-        os.rename(id + '.apk', md5 + '.apk')
+            session['id'] = id
+            session['extension'] = extension
+        elif extension == '.zip':
+            file.save(os.path.join(app.config['TEMPORARY_PATH'], id + extension))
+            
+            session['id'] = id
+            session['extension'] = extension
+
+            zipFile= zipfile.ZipFile(os.path.join(app.config['TEMPORARY_PATH'], id + extension))
+            zipFile.extractall(os.path.join(app.config['TEMPORARY_PATH'], id))
+            zipFile.close()
     return render_template('home.html')
 @app.route('/about', methods=['GET', 'POST'])
 def about():
@@ -45,162 +43,156 @@ def about():
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     return render_template('contact.html')
-@app.route('/result', methods=['GET', 'POST'])
-def result():
-    # redirect ve trang chu neu chua co file nao duoc upload
-    if 'md5' not in session or session['md5'] == []:
+@app.route('/handle', methods=['GET', 'POST'])
+def handle():
+    if 'id' not in session or session['id'] == []:
         return redirect(url_for('home'))
-    
-    # lay gia tri md5 va remove gia tri md5 trong session
-    md5 = session['md5']
-    session.pop('md5', None)
-
-    # danh sach cac ham hash
-    hashfunctions = dict(md5=hashlib.md5,
-                         sha1=hashlib.sha1,
-                         sha256=hashlib.sha256,
-                         sha512=hashlib.sha512
-                         )
-    #tao moc thoi gian
-    start = process_time()
-    #chi dinh file can phan tich
-    a = APK(os.path.join(app.config['UPLOADED_PATH'], md5 + '.apk'))
-    
-    # lay thong tin chung chi cua file
-    certs = set(a.get_certificates_der_v3() + a.get_certificates_der_v2() + [a.get_certificate_der(x) for x in a.get_signature_names()])
-
-    for cert in certs:
-        x509_cert = x509.Certificate.load(cert)
+    elif session['extension'] == '.apk':
+        id = session['id']
+        extension = session['extension']
+        tempPath =  os.path.join(app.config['TEMPORARY_PATH'], id + extension)
+        if checkAPK(tempPath):
+            md5 = getMD5(tempPath)
+            if md5 != False:
+                timestamp = time.time()
+                dateTime = datetime.fromtimestamp(timestamp)
+                submitTime = dateTime.strftime("%Y-%m-%d %H:%M:%S")
+                connect = mysql.connect()
+                cursor = connect.cursor()
+                cursor.callproc('checkFileApk', (md5, submitTime))
+                data = cursor.fetchall()
+                connect.close()
+                if len(data) == 0:
+                    if analyze(tempPath) != False:
+                        copyfile(tempPath, os.path.join(app.config['UPLOADED_PATH'], md5 + extension))
+                        os.remove(tempPath)
+                        session.pop('id', None)
+                        session.pop('extension', None)
+                        return redirect(url_for('resultapk', md5=md5))
+                    else:
+                        session.pop('id', None)
+                        session.pop('extension', None)
+                        os.remove(tempPath)
+                        return redirect(url_for('apkinvalid'))
+                else:
+                    session.pop('id', None)
+                    session.pop('extension', None)
+                    os.remove(tempPath)
+                    return redirect(url_for('resultapk', md5=md5))
+            else:
+                session.pop('id', None)
+                session.pop('extension', None)
+                os.remove(tempPath)
+                return redirect(url_for('apkinvalid'))
+        else:
+            session.pop('id', None)
+            session.pop('extension', None)
+            os.remove(tempPath)
+            return redirect(url_for('apkinvalid'))
+    elif session['extension'] == '.zip':
+        id = session['id']
+        dirs = os.listdir(os.path.join(app.config['TEMPORARY_PATH'], id))
+        for file in dirs:
+            if checkAPK(os.path.join(app.config['TEMPORARY_PATH'], id) + '/' + file):
+                if getMD5(os.path.join(app.config['TEMPORARY_PATH'], id) + '/' + file) is not False:
+                    md5 = getMD5(os.path.join(app.config['TEMPORARY_PATH'], id) + '/' + file)
+                    
+                    if analyze(os.path.join(app.config['TEMPORARY_PATH'], id) + '/' + file) is not False:
+                        analyze(os.path.join(app.config['TEMPORARY_PATH'], id) + '/' + file)
+                        extension = os.path.splitext(file)[1]
+                        copyfile(os.path.join(app.config['TEMPORARY_PATH'], id) + '/' + file, os.path.join(app.config['UPLOADED_PATH'], md5 + extension))
+                        os.remove(os.path.join(app.config['TEMPORARY_PATH'], id) + '/' + file)
+                    
         
-        certificates = {
-            'issuer': {
-                'commonName': 'None',
-                'organizationName': 'None',
-                'organizationalUnitName': 'None',
-                'countryName': 'None',
-                'stateOrProvinceName': 'None',
-                'localityName': 'None'
-            },
-            'subject': {
-                'commonName': 'None',
-                'organizationName': 'None',
-                'organizationalUnitName': 'None',
-                'countryName': 'None',
-                'stateOrProvinceName': 'None',
-                'localityName': 'None'
-            },
-            'validFrom': x509_cert['tbs_certificate']['validity']['not_before'].native,
-            'validTo': x509_cert['tbs_certificate']['validity']['not_after'].native,
-            'serialNumber': hex(x509_cert.serial_number),
-            'hashAlgorithm': x509_cert.hash_algo,
-            'signatureAlgorithm': x509_cert.signature_algo
+        session.pop('id', None)
+        session.pop('extension', None)
+        os.remove(os.path.join(app.config['TEMPORARY_PATH'], id + extension))
+        return redirect(url_for('resultzip', id=id))
+
+@app.route('/resultzip/<id>', methods=['GET', 'POST'])
+def resultzip(id):
+    dirs = os.listdir(os.path.join(app.config['TEMPORARY_PATH'], id))
+    files = []
+    for file in dirs:
+        extension = os.path.splitext(file)[1]
+        if extension == '.apk':
+            print (file)
+            files.append(file)
+    return render_template('resultzip.html', files=files)
+@app.route('/resultapk/<md5>', methods=['GET', 'POST'])
+def resultapk(md5):
+    connect = mysql.connect()
+    cursor = connect.cursor()
+    cursor.callproc('getApkInfo', [md5])
+    data = cursor.fetchall()
+    for element in data:
+        apkinfo = {
+            'md5': element[0],
+            'appName': element[1],
+            'fileSize': element[2],
+            'analysisTime': element[3],
+            'sha1': element[4],
+            'sha256': element[5],
+            'sha512': element[6],
+            'firstSubmission': element[7],
+            'lastSubmission': element[8],
+            'package': element[9],
+            'androidversionCode': element[10],
+            'androidversionName': element[11],
+            'minSDKVersion': element[12],
+            'maxSDKVersion': element[13],
+            'targetSDKVersion': element[14],
+            'mainActivity': element[15]
         }
-        strIssuer = get_certificate_name_string(x509_cert.issuer, short=False)
-        strSubject = get_certificate_name_string(x509_cert.subject, short=False)
-        
-        arrIssuer = strIssuer.split(',')
-        for i in arrIssuer:
-            if i.lstrip().split('=')[0] == 'commonName':
-                certificates['issuer']['commonName'] = i.lstrip().split('=')[1]
-            elif i.lstrip().split('=')[0] == 'organizationName':
-                certificates['issuer']['organizationName'] = i.lstrip().split('=')[1]
-            elif i.lstrip().split('=')[0] == 'organizationalUnitName':
-                certificates['issuer']['organizationalUnitName'] = i.lstrip().split('=')[1]
-            elif i.lstrip().split('=')[0] == 'countryName':
-                certificates['issuer']['countryName'] = i.lstrip().split('=')[1]
-            elif i.lstrip().split('=')[0] == 'stateOrProvinceName':
-                certificates['issuer']['stateOrProvinceName'] = i.lstrip().split('=')[1]
-            elif i.lstrip().split('=')[0] == 'localityName':
-                certificates['issuer']['localityName'] = i.lstrip().split('=')[1]
-        
-        arrSubject = strSubject.split(',')
-        for i in arrSubject:
-            if i.lstrip().split('=')[0] == 'commonName':
-                certificates['subject']['commonName'] = i.lstrip().split('=')[1]
-            elif i.lstrip().split('=')[0] == 'organizationName':
-                certificates['subject']['organizationName'] = i.lstrip().split('=')[1]
-            elif i.lstrip().split('=')[0] == 'organizationalUnitName':
-                certificates['subject']['organizationalUnitName'] = i.lstrip().split('=')[1]
-            elif i.lstrip().split('=')[0] == 'countryName':
-                certificates['subject']['countryName'] = i.lstrip().split('=')[1]
-            elif i.lstrip().split('=')[0] == 'stateOrProvinceName':
-                certificates['subject']['stateOrProvinceName'] = i.lstrip().split('=')[1]
-            elif i.lstrip().split('=')[0] == 'localityName':
-                certificates['subject']['localityName'] = i.lstrip().split('=')[1]
-
-        # lay gia trin trong danh sach cac ham hash
-        for k, v in hashfunctions.items():
-            if k == 'md5':
-                md5 = v(cert).hexdigest()
-            elif k == 'sha1':
-                sha1 = v(cert).hexdigest()
-            elif k == 'sha256':
-                sha256 = v(cert).hexdigest()
-            elif k == 'sha512':
-                sha512 = v(cert).hexdigest()
-        hashfuncs = {
-            'md5': md5,
-            'sha1': sha1,
-            'sha256': sha256,
-            'sha512': sha512
-        }
-    #ket thuc thoi gian phan tich
-    stop = process_time()
-    print("Elapsed time during the whole program in seconds:", stop - start)
     
-    apkinfo = {
-        'appName': a.get_app_name(),
-        'fileSize': os.stat(a.get_filename()).st_size,
-
-        'package': a.get_package(),
-        'androidversionCode': a.get_androidversion_code(),
-        'androidversionName': a.get_androidversion_name(),
-        'minSDKVersion': a.get_min_sdk_version(),
-        'maxSDKVersion': a.get_max_sdk_version(),
-        'targetSDKVersion': a.get_target_sdk_version(),
-
-        'declaredPermissions': a.get_declared_permissions(),
-
-        'requestedPermissions': a.get_permissions(),
-
-        'mainActivity': a.get_main_activity(),
-        'activities': a.get_activities(),
-
-        'services': a.get_services(),
-
-        'receivers': a.get_receivers(),
-        
-        'providers': a.get_providers()
-    }
-
-    appName = a.get_app_name()
-    fileSize = os.stat(a.get_filename()).st_size
-    md5 = md5
-    sha1 = sha1
-    sha256 = sha256
-    sha512 = sha512
-    firstSubmission = '2020-06-09 22:22:22'
-    lastSubmission = '2020-06-09 22:22:22'
-    package = a.get_package()
-    androidversionCode = a.get_androidversion_code()
-    androidversionName = a.get_androidversion_name()
-    minSDKVersion = a.get_min_sdk_version()
-    maxSDKVersion = a.get_max_sdk_version()
-    targetSDKVersion = a.get_target_sdk_version()
-    mainActivity = a.get_main_activity()
-
-    # conn = mysql.connect()
-    # cursor = conn.cursor()
-    # cursor.callproc('addApkInfo',(md5, appName, fileSize, sha1, sha256, sha512, firstSubmission, lastSubmission, package, androidversionCode, androidversionName, minSDKVersion, maxSDKVersion, targetSDKVersion, mainActivity))
-    # data = cursor.fetchall()
-    # if len(data) == 0:
-    #     conn.commit()
-    return render_template('result.html', md5 = md5, apkinfo = apkinfo, certificates = certificates, hashfuncs = hashfuncs)
+    cursor.callproc('getCertificate',[md5])
+    data = cursor.fetchall()
+    for element in data:
+        certificate = {
+            'md5': element[0],
+            'validFrom': element[1],
+            'validTo': element[2],
+            'serialNumber': element[3],
+            'hashAlgorithm': element[4],
+            'signatureAlgorithm': element[5]
+        }
+    
+    cursor.callproc('getCertificateIssuer',[md5])
+    data = cursor.fetchall()
+    for element in data:
+        certificateIssuer = {
+            'md5': element[0],
+            'commonName': element[1],
+            'organizationName': element[2],
+            'organizationalUnitName': element[3],
+            'countryName': element[4],
+            'stateOrProvinceName': element[5],
+            'localityName': element[6]
+        }
+    
+    cursor.callproc('getCertificateSubject',[md5])
+    data = cursor.fetchall()
+    for element in data:
+        certificateSubject = {
+            'md5': element[0],
+            'commonName': element[1],
+            'organizationName': element[2],
+            'organizationalUnitName': element[3],
+            'countryName': element[4],
+            'stateOrProvinceName': element[5],
+            'localityName': element[6]
+        }
+    
 
 
-@app.route('/downloadxml/<id>')
-def downloadxml(id):
+    connect.close()
+    
+    return render_template('resultapk.html', apkinfo = apkinfo, certificate= certificate, certificateIssuer = certificateIssuer, certificateSubject = certificateSubject)
 
-    androaxml_main(os.path.join(app.config['UPLOADED_PATH'], id + '.apk'), os.path.join(app.config['OUTPUT_PATH'], id + '.xml') )
+@app.route('/downloadxml/<md5>.xml')
+def downloadxml(md5):
+    return send_from_directory(os.path.join(app.config['OUTPUT_PATH']), md5 + '.xml', as_attachment=True)
 
-    return send_from_directory(os.path.join(app.config['OUTPUT_PATH']), id + '.xml', as_attachment=True)
+@app.route('/apkinvalid', methods=['GET', 'POST'])
+def apkinvalid():
+    return render_template('apkinvalid.html')

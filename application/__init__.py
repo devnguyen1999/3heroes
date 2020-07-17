@@ -8,13 +8,14 @@ mysql = MySQL()
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config.update(
     UPLOADED_PATH=os.path.join(basedir, 'static/uploads'),
+    TEMPORARY_PATH=os.path.join(basedir, 'static/temp'),
     OUTPUT_PATH=os.path.join(basedir, 'static/outputs'),
     SECRET_KEY='frommixigamingwithlove',
     # Flask-Dropzone config:
     DROPZONE_ALLOWED_FILE_CUSTOM=True,
-    DROPZONE_ALLOWED_FILE_TYPE='.apk',
+    DROPZONE_ALLOWED_FILE_TYPE='.apk, .zip',
     DROPZONE_MAX_FILE_SIZE=1024,
-    DROPZONE_REDIRECT_VIEW='result',  # set redirect view
+    DROPZONE_REDIRECT_VIEW='handle',  # set redirect view
     # MySQL configurations
     MYSQL_DATABASE_USER = 'root',
     MYSQL_DATABASE_PASSWORD = '09061999',

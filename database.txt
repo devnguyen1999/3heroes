@@ -1,9 +1,11 @@
-CREATE DATABASE 3heroes;
+DROP DATABASE IF EXISTS 3heroes;
+CREATE DATABASE IF NOT EXISTS 3heroes;
 USE 3heroes;
 CREATE TABLE tbl_apkinfo (
 	md5 VARCHAR(175) NOT NULL,
 	appName VARCHAR(50) NULL,
 	fileSize INT NULL,
+	analysisTime FLOAT(10,5) NULL,
 	sha1 VARCHAR(200) NOT NULL UNIQUE,
 	sha256 VARCHAR(225) NOT NULL UNIQUE,
 	sha512 VARCHAR(250) NOT NULL UNIQUE,
@@ -20,15 +22,29 @@ CREATE TABLE tbl_apkinfo (
 );
 
 DELIMITER //
-CREATE DEFINER=root@localhost PROCEDURE addApkInfo(
+CREATE DEFINER = root@localhost PROCEDURE checkFileApk(
+	IN md5 VARCHAR(175),
+	IN submitTime DATETIME
+)
+BEGIN
+	IF ( SELECT EXISTS (SELECT * FROM tbl_apkinfo WHERE md5 = md5) ) THEN
+		SELECT 'File already exists!!!';
+	ELSE
+		UPDATE tbl_apkinfo SET lastSubmission = submitTime;
+	END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE DEFINER = root@localhost PROCEDURE addApkInfo(
 	IN md5 VARCHAR(175),
 	IN appName VARCHAR(50),
 	IN fileSize INT,
+	IN analysisTime FLOAT(10,5),
 	IN sha1 VARCHAR(200),
 	IN sha256 VARCHAR(225),
 	IN sha512 VARCHAR(250),
-	IN firstSubmission DATETIME,
-	IN lastSubmission DATETIME,
+	IN submitTime DATETIME,
 	IN package VARCHAR(50),
 	IN androidversionCode VARCHAR(50),
 	IN androidversionName VARCHAR(50),
@@ -38,49 +54,232 @@ CREATE DEFINER=root@localhost PROCEDURE addApkInfo(
 	IN mainActivity VARCHAR(50)
 )
 BEGIN
-    IF ( SELECT EXISTS (SELECT * FROM tbl_apkinfo WHERE md5 = md5) ) THEN
-     
-        SELECT 'File already exists!';
-     
+    
+	INSERT INTO tbl_apkinfo
+	(
+		md5,
+		appName,
+		fileSize,
+		analysisTime,
+		sha1,
+		sha256,
+		sha512,
+		firstSubmission,
+		lastSubmission,
+		package,
+		androidversionCode,
+		androidversionName,
+		minSDKVersion,
+		maxSDKVersion,
+		targetSDKVersion,
+		mainActivity
+	)
+	VALUES
+	(
+		md5,
+		appName,
+		fileSize,
+		analysisTime,
+		sha1,
+		sha256,
+		sha512,
+		submitTime,
+		submitTime,
+		package,
+		androidversionCode,
+		androidversionName,
+		minSDKVersion,
+		maxSDKVersion,
+		targetSDKVersion,
+		mainActivity
+	);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE DEFINER = root@localhost PROCEDURE getApkInfo(
+	IN md5 VARCHAR(175)
+)
+BEGIN
+    SELECT * FROM tbl_apkinfo WHERE md5 = md5;
+END //
+DELIMITER ;
+
+
+
+
+CREATE TABLE tbl_certificate (
+	md5 VARCHAR(175) NOT NULL,
+	validFrom DATETIME NULL,
+	validTo DATETIME NULL,
+	serialNumber VARCHAR(20) NULL,
+	hashAlgorithm VARCHAR(10) NULL,
+	signatureAlgorithm VARCHAR(30) NULL,
+	PRIMARY KEY (md5)
+);
+
+DELIMITER //
+CREATE DEFINER = root@localhost PROCEDURE addCertificate(
+	IN md5 VARCHAR(175),
+	IN validFrom DATETIME,
+	IN validTo DATETIME,
+	IN serialNumber VARCHAR(20),
+	IN hashAlgorithm VARCHAR(10),
+	IN signatureAlgorithm VARCHAR(30)
+)
+BEGIN
+	IF ( SELECT EXISTS (SELECT * FROM tbl_certificate WHERE md5 = md5) ) THEN
+		SELECT "File already exists!!!";
     ELSE
-     
-        INSERT INTO tbl_apkinfo
+        INSERT INTO tbl_certificate
         (
 			md5,
-			appName,
-			fileSize,
-			sha1,
-			sha256,
-			sha512,
-			firstSubmission,
-			lastSubmission,
-			package,
-			androidversionCode,
-			androidversionName,
-			minSDKVersion,
-			maxSDKVersion,
-			targetSDKVersion,
-			mainActivity
+			validFrom,
+			validTo,
+			serialNumber,
+			hashAlgorithm,
+			signatureAlgorithm
         )
         VALUES
         (
 			md5,
-			appName,
-			fileSize,
-			sha1,
-			sha256,
-			sha512,
-			firstSubmission,
-			lastSubmission,
-			package,
-			androidversionCode,
-			androidversionName,
-			minSDKVersion,
-			maxSDKVersion,
-			targetSDKVersion,
-			mainActivity
+			validFrom,
+			validTo,
+			serialNumber,
+			hashAlgorithm,
+			signatureAlgorithm
         );
-     
-    END IF;
+	END IF;
 END //
 DELIMITER ;
+
+DELIMITER //
+CREATE DEFINER = root@localhost PROCEDURE getCertificate(
+	IN md5 VARCHAR(175)
+)
+BEGIN
+    SELECT * FROM tbl_certificate WHERE md5 = md5;
+END //
+DELIMITER ;
+
+
+
+CREATE TABLE tbl_certificateissuer (
+	md5 VARCHAR(175) NOT NULL,
+	commonName VARCHAR(75) NULL,
+	organizationName VARCHAR(75) NULL,
+	organizationalUnitName VARCHAR(50) NULL,
+	countryName VARCHAR(30) NULL,
+	stateOrProvinceName VARCHAR(30) NULL,
+	localityName VARCHAR(50) NULL,
+	PRIMARY KEY (md5)
+);
+
+DELIMITER //
+CREATE DEFINER = root@localhost PROCEDURE addCertificateIssuer(
+	IN md5 VARCHAR(175),
+	IN commonName VARCHAR(75),
+	IN organizationName VARCHAR(75),
+	IN organizationalUnitName VARCHAR(50),
+	IN countryName VARCHAR(30),
+	IN stateOrProvinceName VARCHAR(30),
+	IN localityName VARCHAR(50)
+)
+BEGIN
+	IF ( SELECT EXISTS (SELECT * FROM tbl_certificateissuer WHERE md5 = md5) ) THEN
+		SELECT "File already exists!!!";
+    ELSE
+        INSERT INTO tbl_certificateissuer
+        (
+			md5,
+			commonName,
+			organizationName,
+			organizationalUnitName,
+			countryName,
+			stateOrProvinceName,
+			localityName
+        )
+        VALUES
+        (
+			md5,
+			commonName,
+			organizationName,
+			organizationalUnitName,
+			countryName,
+			stateOrProvinceName,
+			localityName
+        );
+	END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE DEFINER = root@localhost PROCEDURE getCertificateIssuer(
+	IN md5 VARCHAR(175)
+)
+BEGIN
+    SELECT * FROM tbl_certificateissuer WHERE md5 = md5;
+END //
+DELIMITER ;
+
+
+CREATE TABLE tbl_certificatesubject (
+	md5 VARCHAR(175) NOT NULL,
+	commonName VARCHAR(75) NULL,
+	organizationName VARCHAR(75) NULL,
+	organizationalUnitName VARCHAR(50) NULL,
+	countryName VARCHAR(30) NULL,
+	stateOrProvinceName VARCHAR(30) NULL,
+	localityName VARCHAR(50) NULL,
+	PRIMARY KEY (md5)
+);
+
+DELIMITER //
+CREATE DEFINER = root@localhost PROCEDURE addCertificateSubject(
+	IN md5 VARCHAR(175),
+	IN commonName VARCHAR(75),
+	IN organizationName VARCHAR(75),
+	IN organizationalUnitName VARCHAR(50),
+	IN countryName VARCHAR(30),
+	IN stateOrProvinceName VARCHAR(30),
+	IN localityName VARCHAR(50)
+)
+BEGIN
+	IF ( SELECT EXISTS (SELECT * FROM tbl_certificatesubject WHERE md5 = md5) ) THEN
+		SELECT "File already exists!!!";
+    ELSE
+        INSERT INTO tbl_certificatesubject
+        (
+			md5,
+			commonName,
+			organizationName,
+			organizationalUnitName,
+			countryName,
+			stateOrProvinceName,
+			localityName
+        )
+        VALUES
+        (
+			md5,
+			commonName,
+			organizationName,
+			organizationalUnitName,
+			countryName,
+			stateOrProvinceName,
+			localityName
+        );
+	END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE DEFINER = root@localhost PROCEDURE getCertificateSubject(
+	IN md5 VARCHAR(175)
+)
+BEGIN
+    SELECT * FROM tbl_certificatesubject WHERE md5 = md5;
+END //
+DELIMITER ;
+
+
+
