@@ -1,4 +1,4 @@
-import os, hashlib, time
+import os, hashlib, time, json
 from application import app, basedir, mysql
 from androguard.cli import androaxml_main
 from androguard.core.bytecodes.apk import APK
@@ -10,10 +10,10 @@ def analyze(path):
     try:
         start = process_time()
         hashfunctions = dict(md5=hashlib.md5,
-                         sha1=hashlib.sha1,
-                         sha256=hashlib.sha256,
-                         sha512=hashlib.sha512
-                         )
+                            sha1=hashlib.sha1,
+                            sha256=hashlib.sha256,
+                            sha512=hashlib.sha512
+                            )
         a = APK(path)
         
         certs = set(a.get_certificates_der_v3() + a.get_certificates_der_v2() + [a.get_certificate_der(x) for x in a.get_signature_names()])
@@ -22,20 +22,20 @@ def analyze(path):
             x509_cert = x509.Certificate.load(cert)
             
             issuer = {
-                'commonName': '',
-                'organizationName': '',
-                'organizationalUnitName': '',
-                'countryName': '',
-                'stateOrProvinceName': '',
-                'localityName': ''
+                'commonName': None,
+                'organizationName': None,
+                'organizationalUnitName': None,
+                'countryName': None,
+                'stateOrProvinceName': None,
+                'localityName': None
             }
             subject = {
-                'commonName': '',
-                'organizationName': '',
-                'organizationalUnitName': '',
-                'countryName': '',
-                'stateOrProvinceName': '',
-                'localityName': ''
+                'commonName': None,
+                'organizationName': None,
+                'organizationalUnitName': None,
+                'countryName': None,
+                'stateOrProvinceName': None,
+                'localityName': None
             }
 
             strIssuer = get_certificate_name_string(x509_cert.issuer, short=False)
@@ -100,13 +100,29 @@ def analyze(path):
         targetSDKVersion = a.get_target_sdk_version()
         mainActivity = a.get_main_activity()
 
-        validFrom = x509_cert['tbs_certificate']['validity']['not_before'].native.strftime("%Y-%m-%d %H:%M:%S")
-        validTo = x509_cert['tbs_certificate']['validity']['not_after'].native.strftime("%Y-%m-%d %H:%M:%S")
-        serialNumber = hex(x509_cert.serial_number)
-        hashAlgorithm = x509_cert.hash_algo
-        signatureAlgorithm = x509_cert.signature_algo
+        attributes = {
+            'validFrom': x509_cert['tbs_certificate']['validity']['not_before'].native.strftime("%Y-%m-%d %H:%M:%S"),
+            'validTo': x509_cert['tbs_certificate']['validity']['not_after'].native.strftime("%Y-%m-%d %H:%M:%S"),
+            'serialNumber': hex(x509_cert.serial_number),
+            'hashAlgorithm': x509_cert.hash_algo,
+            'signatureAlgorithm': x509_cert.signature_algo
+        }
 
+        certificateAttributes = json.dumps(attributes)
+        certificateIssuer = json.dumps(issuer)
+        certificateSubject = json.dumps(subject)
 
+        declaredPermissions = json.dumps(a.get_declared_permissions())
+
+        requestedPermissions = json.dumps(a.get_permissions())
+
+        activities = json.dumps(a.get_activities())
+
+        services = json.dumps(a.get_services())
+
+        receivers = json.dumps(a.get_receivers())
+            
+        providers = json.dumps(a.get_providers())
 
 
 
@@ -116,18 +132,12 @@ def analyze(path):
         connect = mysql.connect()
         cursor = connect.cursor()
 
-        cursor.callproc('addApkInfo', (md5, appName, fileSize, analysisTime, sha1, sha256, sha512, submitTime, package, androidversionCode, androidversionName, minSDKVersion, maxSDKVersion, targetSDKVersion, mainActivity))
-
-        cursor.callproc('addCertificate', (md5, validFrom, validTo, serialNumber, hashAlgorithm, signatureAlgorithm))
-
-        cursor.callproc('addCertificateIssuer', (md5, issuer['commonName'], issuer['organizationName'], issuer['organizationalUnitName'], issuer['countryName'], issuer['stateOrProvinceName'], issuer['localityName']))
-
-        cursor.callproc('addCertificateSubject', (md5, subject['commonName'], subject['organizationName'], subject['organizationalUnitName'], subject['countryName'], subject['stateOrProvinceName'], subject['localityName']))
+        cursor.callproc('addApkInfo', (md5, appName, fileSize, analysisTime, sha1, sha256, sha512, submitTime, package, androidversionCode, androidversionName, minSDKVersion, maxSDKVersion, targetSDKVersion, mainActivity, certificateAttributes, certificateIssuer, certificateSubject, declaredPermissions, requestedPermissions, activities, services, providers, receivers))
 
         connect.commit()
         connect.close()
 
-        # androaxml_main(path, os.path.join(app.config['OUTPUT_PATH'], md5 + '.xml'))
+        androaxml_main(path, os.path.join(app.config['OUTPUT_PATH'], md5 + '.xml'))
         return True
     except:
         return False

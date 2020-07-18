@@ -1,4 +1,4 @@
-import magicpip
+import magic
 def checkZIP(path):
     try:
         checktype = magic.from_file(str(path),mime=True)
