@@ -48,56 +48,94 @@
         <span>Valid From:&#160;{{ apkinfo.certificate.validFrom }}</span>
         <span>Valid To:&#160;{{ apkinfo.certificate.validTo }}</span>
         <span>Serial Number:&#160;{{ apkinfo.certificate.serialNumber }}</span>
-        <span>Hash Algorithm:&#160;{{ apkinfo.certificate.hashAlgorithm }}</span>
-        <span>Signature Algorithm:&#160;{{ apkinfo.certificate.signatureAlgorithm }}</span>
+        <span
+          >Hash Algorithm:&#160;{{ apkinfo.certificate.hashAlgorithm }}</span
+        >
+        <span
+          >Signature Algorithm:&#160;{{ apkinfo.certificate.signatureAlgorithm
+          }}</span
+        >
 
         <h6>Certificate Issuer:</h6>
-        <span>Common Name:&#160;{{ apkinfo.certificateIssuer.commonName }}</span>
-        <span>Organization:&#160;{{ apkinfo.certificateIssuer.organizationName }}</span>
-        <span>Organizational Unit:&#160;{{ apkinfo.certificateIssuer.organizationalUnitName }}</span>
-        <span>Country Code:&#160;{{ apkinfo.certificateIssuer.countryName }}</span>
-        <span>State:&#160;{{ apkinfo.certificateIssuer.stateOrProvinceName }}</span>
+        <span
+          >Common Name:&#160;{{ apkinfo.certificateIssuer.commonName }}</span
+        >
+        <span
+          >Organization:&#160;{{ apkinfo.certificateIssuer.organizationName
+          }}</span
+        >
+        <span
+          >Organizational Unit:&#160;{{
+          apkinfo.certificateIssuer.organizationalUnitName }}</span
+        >
+        <span
+          >Country Code:&#160;{{ apkinfo.certificateIssuer.countryName }}</span
+        >
+        <span
+          >State:&#160;{{ apkinfo.certificateIssuer.stateOrProvinceName }}</span
+        >
         <span>Locality:&#160;{{ apkinfo.certificateIssuer.localityName }}</span>
 
         <h6>Certificate Subject:</h6>
-        <span>Common Name:&#160;{{ apkinfo.certificateSubject.commonName }}</span>
-        <span>Organization:&#160;{{ apkinfo.certificateSubject.organizationName }}</span>
-        <span>Organizational Unit:&#160;{{ apkinfo.certificateSubject.organizationalUnitName }}</span>
-        <span>Country Code:&#160;{{ apkinfo.certificateSubject.countryName }}</span>
-        <span>State:&#160;{{ apkinfo.certificateSubject.stateOrProvinceName }}</span>
-        <span>Locality:&#160;{{ apkinfo.certificateSubject.localityName }}</span>
+        <span
+          >Common Name:&#160;{{ apkinfo.certificateSubject.commonName }}</span
+        >
+        <span
+          >Organization:&#160;{{ apkinfo.certificateSubject.organizationName
+          }}</span
+        >
+        <span
+          >Organizational Unit:&#160;{{
+          apkinfo.certificateSubject.organizationalUnitName }}</span
+        >
+        <span
+          >Country Code:&#160;{{ apkinfo.certificateSubject.countryName }}</span
+        >
+        <span
+          >State:&#160;{{ apkinfo.certificateSubject.stateOrProvinceName
+          }}</span
+        >
+        <span
+          >Locality:&#160;{{ apkinfo.certificateSubject.localityName }}</span
+        >
 
         <h6>Declared Permissions</h6>
         {% for declaredPermission in apkinfo.declaredPermissions %}
-          <span>{{ declaredPermission }}</span>
+        <span>{{ declaredPermission }}</span>
         {% endfor %}
 
         <h6>Requested Permissions</h6>
         {% for requestedPermission in apkinfo.requestedPermissions %}
-          <span>{{ requestedPermission }}</span>
+        <span>{{ requestedPermission }}</span>
         {% endfor %}
 
         <h6>Activities</h6>
         <span>Main Activity:&#160;{{ apkinfo.mainActivity }}</span>
         <span>All Activites:&#160;</span>
         {% for activity in apkinfo.activities %}
-          <span>{{ activity }}</span>
+        <span>{{ activity }}</span>
         {% endfor %}
 
         <h6>Services</h6>
         {% for service in apkinfo.services %}
-          <span>{{ service }}</span>
+        <span>{{ service }}</span>
         {% endfor %}
 
         <h6>Providers</h6>
         {% for provider in apkinfo.providers %}
-          <span>{{ provider }}</span>
+        <span>{{ provider }}</span>
         {% endfor %}
 
         <h6>Receivers</h6>
         {% for receiver in apkinfo.receivers %}
-          <span>{{ receiver }}</span>
+        <span>{{ receiver }}</span>
         {% endfor %}
+
+        <h6>Download XML File</h6>
+
+        <a href="{{ url_for('downloadxml', md5=md5) }}"
+          >Click Here To Download XML File</a
+        >
       </div>
     </div>
   </div>

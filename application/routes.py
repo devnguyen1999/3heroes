@@ -46,7 +46,7 @@ def handle():
             if md5 != False:
                 connect = mysql.connect()
                 cursor = connect.cursor()
-                cursor.callproc('getApkInfo', [md5])
+                cursor.execute("SELECT * FROM tbl_apkinfo WHERE md5 = %s", md5)
                 data = cursor.fetchall()
                 connect.close()
                 if len(data) == 0:
@@ -65,7 +65,7 @@ def handle():
                     connect = mysql.connect()
                     cursor = connect.cursor()
                     timeOfSubmit = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S")
-                    cursor.callproc('updateTimeOfSubmit', (md5, timeOfSubmit))
+                    cursor.execute("UPDATE tbl_apkinfo SET lastSubmission = %s WHERE md5 = %s", (timeOfSubmit, md5))
                     connect.commit()
                     connect.close()
                     session.pop('id', None)
@@ -102,7 +102,7 @@ def handle():
                     if md5 != False:
                         connect = mysql.connect()
                         cursor = connect.cursor()
-                        cursor.callproc('getApkInfo', [md5])
+                        cursor.execute("SELECT * FROM tbl_apkinfo WHERE md5 = %s", (md5))
                         data = cursor.fetchall()
                         connect.close()
                         if len(data) == 0:
@@ -117,7 +117,7 @@ def handle():
                             connect = mysql.connect()
                             cursor = connect.cursor()
                             timeOfSubmit = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S")
-                            cursor.callproc('updateTimeOfSubmit', (md5, timeOfSubmit))
+                            cursor.execute("UPDATE tbl_apkinfo SET lastSubmission = %s WHERE md5 = %s", (timeOfSubmit, md5))
                             connect.commit()
                             connect.close()
                             nameArr.append (file)
@@ -145,15 +145,17 @@ def handle():
 def resultzip(id):
     nameArr = session['nameArr']
     md5Arr = session['md5Arr']
+    print(nameArr)
     session.pop('nameArr', None)
     session.pop('md5Arr', None)
-    return render_template('resultzip.html')
+    return render_template('resultzip.html', nameArr = nameArr, md5Arr = md5Arr)
 @app.route('/resultapk/<md5>', methods=['GET', 'POST'])
 def resultapk(md5):
     connect = mysql.connect()
     cursor = connect.cursor()
-    cursor.callproc('getApkInfo', [md5])
+    cursor.execute("SELECT * FROM tbl_apkinfo WHERE md5 = %s", (md5))
     data = cursor.fetchall()
+    connect.close()
     for element in data:
         apkinfo = {
             'md5': element[0],
@@ -182,7 +184,6 @@ def resultapk(md5):
             'providers': json.loads(element[23]),
             'receivers': json.loads(element[24])
         }
-    connect.close()
     return render_template('resultapk.html', apkinfo = apkinfo)
 
 @app.route('/downloadxml/<md5>.xml')

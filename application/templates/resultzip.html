@@ -15,16 +15,18 @@
     </div>
     <div class="col-8 col-lg-10">
       <h5>ZIP FILE INFO</h5>
-      <div class="d-flex flex-column">
-
-      </div>
+      <div class="d-flex flex-column"></div>
     </div>
   </div>
   <div class="row my-3">
     <div class="col-12">
       <h5>DETAIL</h5>
       <div class="d-flex flex-column">
-       
+        <h6>All files</h6>
+        {% for name in nameArr %} {% for md5 in md5Arr %}
+        <a href="{{ url_for('resultapk', md5 = md5) }}">{{ name }}</a>
+        {% endfor %} {% endfor %}
+      </div>
     </div>
   </div>
 </div>
