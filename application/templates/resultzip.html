@@ -23,9 +23,13 @@
       <h5>DETAIL</h5>
       <div class="d-flex flex-column">
         <h6>All files</h6>
-        {% for name in nameArr %} {% for md5 in md5Arr %}
-        <a href="{{ url_for('resultapk', md5 = md5) }}">{{ name }}</a>
-        {% endfor %} {% endfor %}
+        {% for md5 in md5Arr %} {% if md5 != None %}
+        <a href="{{ url_for('resultapk', md5 = md5 )}}"
+          >{{ nameArr[md5Arr.index(md5)] }}</a
+        >{% endif %} {% if md5 == None %}
+        <a href="{{ url_for('invalidapk') }}"
+          >{{ nameArr[md5Arr.index(md5)] }}</a
+        >{% endif %} {% endfor %}
       </div>
     </div>
   </div>

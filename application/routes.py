@@ -60,7 +60,7 @@ def handle():
                         session.pop('id', None)
                         session.pop('extension', None)
                         os.remove(tempPath)
-                        return redirect(url_for('apkinvalid', id = id))
+                        return redirect(url_for('invalidapk'))
                 else:
                     connect = mysql.connect()
                     cursor = connect.cursor()
@@ -76,12 +76,12 @@ def handle():
                 session.pop('id', None)
                 session.pop('extension', None)
                 os.remove(tempPath)
-                return redirect(url_for('apkinvalid', id = id))
+                return redirect(url_for('invalidapk'))
         else:
             session.pop('id', None)
             session.pop('extension', None)
             os.remove(tempPath)
-            return redirect(url_for('apkinvalid', id = id))
+            return redirect(url_for('invalidapk'))
     elif session['extension'] == '.zip':
         id = session['id']
         extension = session['extension']
@@ -139,16 +139,26 @@ def handle():
             session.pop('id', None)
             session.pop('extension', None)
             os.remove(tempPathZIP)
+            return redirect(url_for('invalidzip'))
 
+@app.route('/invalidapk', methods=['GET', 'POST'])
+def invalidapk():
+    return render_template('invalidapk.html')
+
+@app.route('/invalidzip', methods=['GET', 'POST'])
+def invalidzip():
+    return render_template('invalidzip.html')
 
 @app.route('/resultzip/<id>', methods=['GET', 'POST'])
 def resultzip(id):
     nameArr = session['nameArr']
     md5Arr = session['md5Arr']
     print(nameArr)
+    print(md5Arr)
     session.pop('nameArr', None)
     session.pop('md5Arr', None)
     return render_template('resultzip.html', nameArr = nameArr, md5Arr = md5Arr)
+
 @app.route('/resultapk/<md5>', methods=['GET', 'POST'])
 def resultapk(md5):
     connect = mysql.connect()
@@ -189,11 +199,3 @@ def resultapk(md5):
 @app.route('/downloadxml/<md5>.xml')
 def downloadxml(md5):
     return send_from_directory(os.path.join(app.config['OUTPUT_PATH']), md5 + '.xml', as_attachment=True)
-
-@app.route('/apkinvalid/<id>', methods=['GET', 'POST'])
-def apkinvalid(id):
-    return render_template('apkinvalid.html')
-
-@app.route('/zipinvalid<id>', methods=['GET', 'POST'])
-def zipinvalid(id):
-    return render_template('apkinvalid.html')
