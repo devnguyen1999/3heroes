@@ -1,11 +1,12 @@
 import os, hashlib, time, json
+from time import process_time
+from datetime import datetime
+
 from application import app, basedir, mysql
 from androguard.cli import androaxml_main
 from androguard.core.bytecodes.apk import APK
 from androguard.util import get_certificate_name_string
 from asn1crypto import x509, keys
-from time import process_time
-from datetime import datetime
 def analyze(path):
     try:
         start = process_time()

@@ -13,19 +13,16 @@ from application.handle.getMD5 import getMD5
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
 def home():
-    if 'id' not in session:
-        session['id'] = []
+    if request.method == 'POST':
+        file = request.files['file']
 
-        if request.method == 'POST':
-            file = request.files['file']
-            
-            id = str(uuid.uuid4())
-            extension = os.path.splitext(file.filename)[1]
+        id = str(uuid.uuid4())
+        extension = os.path.splitext(file.filename)[1]
 
-            file.save(os.path.join(app.config['TEMPORARY_PATH'], id + extension))
-            
-            session['id'] = id
-            session['extension'] = extension
+        file.save(os.path.join(app.config['TEMPORARY_PATH'], id + extension))
+        
+        session['id'] = id
+        session['extension'] = extension
     return render_template('home.html')
 
 @app.route('/about', methods=['GET', 'POST'])
@@ -38,7 +35,7 @@ def contact():
 
 @app.route('/handle', methods=['GET', 'POST'])
 def handle():
-    if 'id' not in session or session['id'] == []:
+    if 'id' not in session:
         return redirect(url_for('home'))
     elif session['extension'] == '.apk':
         id = session['id']
@@ -58,7 +55,7 @@ def handle():
                         os.remove(tempPath)
                         session.pop('id', None)
                         session.pop('extension', None)
-                        return redirect(url_for('resultapk', md5=md5))
+                        return redirect(url_for('resultapk', md5 = md5))
                     else:
                         session.pop('id', None)
                         session.pop('extension', None)
