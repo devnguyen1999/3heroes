@@ -14,7 +14,7 @@ app.config.update(
     # Flask-Dropzone config:
     DROPZONE_ALLOWED_FILE_CUSTOM=True,
     DROPZONE_ALLOWED_FILE_TYPE='.apk, .zip',
-    DROPZONE_MAX_FILE_SIZE=2050,
+    DROPZONE_MAX_FILE_SIZE=2560,
     DROPZONE_REDIRECT_VIEW='handle',  # set redirect view
     # MySQL configurations
     MYSQL_DATABASE_USER = 'root',
