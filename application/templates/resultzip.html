@@ -23,13 +23,12 @@
       <h5>DETAIL</h5>
       <div class="d-flex flex-column">
         <h6>All files</h6>
-        {% for md5 in md5Arr %} {% if md5 != None %}
-        <a href="{{ url_for('resultapk', md5 = md5 )}}"
-          >{{ nameArr[md5Arr.index(md5)] }}</a
-        >{% endif %} {% if md5 == None %}
-        <a href="{{ url_for('invalidapk') }}"
-          >{{ nameArr[md5Arr.index(md5)] }}</a
-        >{% endif %} {% endfor %}
+        {% for name in nameArr %} {% if md5Arr[nameArr.index(name)] != None %}
+        <a href="{{ url_for('resultapk', md5 = md5Arr[nameArr.index(name)] )}}"
+          >{{ name }}</a
+        >{% endif %} {% if md5Arr[nameArr.index(name)] == None %}
+        <a href="{{ url_for('invalidapk') }}">{{ name }}</a>{% endif %} {%
+        endfor %}
       </div>
     </div>
   </div>

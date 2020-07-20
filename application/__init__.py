@@ -12,10 +12,10 @@ app.config.update(
     OUTPUT_PATH=os.path.join(basedir, 'static/outputs'),
     SECRET_KEY='frommixigamingwithlove',
     # Flask-Dropzone config:
-    DROPZONE_ALLOWED_FILE_CUSTOM=True,
-    DROPZONE_ALLOWED_FILE_TYPE='.apk, .zip',
-    DROPZONE_MAX_FILE_SIZE=2560,
-    DROPZONE_REDIRECT_VIEW='handle',  # set redirect view
+    DROPZONE_ALLOWED_FILE_CUSTOM = True,
+    DROPZONE_ALLOWED_FILE_TYPE = '.apk, .zip',
+    DROPZONE_MAX_FILE_SIZE = 768,
+    DROPZONE_REDIRECT_VIEW = 'handle',  # set redirect view
     # MySQL configurations
     MYSQL_DATABASE_USER = 'root',
     MYSQL_DATABASE_PASSWORD = '09061999',
