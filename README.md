@@ -1,6 +1,6 @@
 # 3heroes
 sudo apt-get update<br>
-sudo apt-get install git python3 mysql-server<br>
+sudo apt-get install git python3 python3-venv mysql-server<br>
 git clone https://github.com/thanhdevil9699/3heroes.git<br>
 
 ### Cai dat MySQL:
